@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Admin Control - VIP V2RAY</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        body {
+            background: #0b0f1c;
+            padding: 24px 20px;
+            color: #eef2ff;
+        }
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        /* header */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+            background: #111827;
+            padding: 16px 24px;
+            border-radius: 28px;
+            border: 1px solid #2d3a5e;
+        }
+        h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #c084fc, #60a5fa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .dashboard-badge {
+            background: #1e293b;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            border-left: 3px solid #3b82f6;
+        }
+        /* card grid */
+        .grid-2col {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .card {
+            background: #0f172ad9;
+            backdrop-filter: blur(2px);
+            background: #111927;
+            border-radius: 28px;
+            padding: 1.5rem 1.8rem;
+            border: 1px solid #28344e;
+            box-shadow: 0 12px 24px -12px rgba(0,0,0,0.5);
+            transition: 0.2s;
+        }
+        .card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 14px;
+        }
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            background: #0a0f1a;
+            padding: 12px 16px;
+            border-radius: 20px;
+            margin: 12px 0;
+            font-weight: 500;
+        }
+        .price-label {
+            color: #9ca3af;
+        }
+        .price-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #facc15;
+        }
+        button {
+            background: #1f2a48;
+            border: none;
+            color: white;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            margin: 6px 6px 0 0;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.8rem;
+        }
+        button.primary {
+            background: #3b82f6;
+        }
+        button.primary:hover {
+            background: #2563eb;
+            transform: scale(0.97);
+        }
+        button.danger {
+            background: #7f1a1a;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        input, textarea, select {
+            background: #0a0f1a;
+            border: 1px solid #2d3a5e;
+            padding: 10px 14px;
+            border-radius: 24px;
+            color: white;
+            width: 100%;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+        label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-bottom: 4px;
+            display: block;
+        }
+        .flex-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .server-item {
+            background: #0f1422;
+            padding: 12px;
+            border-radius: 20px;
+            margin-bottom: 14px;
+        }
+        .inventory-tag {
+            background: #1e2a3a;
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 30px;
+            margin: 5px 8px 5px 0;
+            font-size: 0.8rem;
+        }
+        hr {
+            border-color: #28344e;
+            margin: 16px 0;
+        }
+        .status-msg {
+            background: #0b2b1f;
+            padding: 8px 14px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            margin-top: 12px;
+            text-align: center;
+        }
+        @media (max-width: 700px) {
+            .card { padding: 1.2rem; }
+            .grid-2col { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-container">
+    <div class="top-bar">
+        <h1>🛡️ Admin Control</h1>
+        <div class="dashboard-badge">📊 Go to Dashboard · Firebase Ready</div>
+    </div>
+
+    <!-- 2 column layout -->
+    <div class="grid-2col">
+        <!-- LEFT COLUMN: Products Prices + Bank + Logos + Announcement -->
+        <div>
+            <!-- PRODUCT PRICES CARD -->
+            <div class="card">
+                <h3>💰 Product Prices</h3>
+                <div class="price-row"><span class="price-label">V2RAY</span><span class="price-value" id="priceV2RAY">50</span></div>
+                <div class="price-row"><span class="price-label">ZIVPN</span><span class="price-value" id="priceZIVPN">50</span></div>
+                <div class="price-row"><span class="price-label">NetMod</span><span class="price-value" id="priceNetMod">50</span></div>
+                <div class="flex-btns">
+                    <button class="primary" id="updateV2RAYBtn">✏️ Update V2RAY</button>
+                    <button class="primary" id="updateZIVPNBtn">✏️ Update ZIVPN</button>
+                    <button class="primary" id="updateNetModBtn">✏️ Update NetMod</button>
+                </div>
+                <div id="priceMsg" class="status-msg"></div>
+            </div>
+
+            <!-- ANNOUNCEMENT CARD -->
+            <div class="card">
+                <h3>📢 Announcement</h3>
+                <textarea id="announceText" rows="2" placeholder="Type announcement here..."></textarea>
+                <button id="publishAnnounceBtn" class="primary">📡 Publish</button>
+                <div id="announceMsg" class="status-msg"></div>
+            </div>
+
+            <!-- BANK SETTINGS CARD -->
+            <div class="card">
+                <h3>🏦 Bank Settings</h3>
+                <label>Logo URL:</label><input type="text" id="bankLogoUrl" placeholder="https://...">
+                <label>QR URL:</label><input type="text" id="bankQrUrl" placeholder="https://...">
+                <label>Bank Name:</label><input type="text" id="bankName" placeholder="Kasikorn / PromptPay">
+                <label>Account No.:</label><input type="text" id="bankAccountNo" placeholder="123-456-789">
+                <label>Holder:</label><input type="text" id="bankHolder" placeholder="John Doe">
+                <button id="saveBankBtn" class="primary">💾 Save Bank</button>
+                <div id="bankMsg" class="status-msg"></div>
+            </div>
+
+            <!-- PRODUCT LOGOS CARD -->
+            <div class="card">
+                <h3>🖼️ Product Logos</h3>
+                <label>V2RAY Logo URL:</label><input type="text" id="logoV2RAY" placeholder="Logo URL">
+                <label>ZIVPN Logo URL:</label><input type="text" id="logoZIVPN" placeholder="Logo URL">
+                <label>NetMod Logo URL:</label><input type="text" id="logoNetMod" placeholder="Logo URL">
+                <button id="saveLogosBtn" class="primary">💾 Save Logos</button>
+                <div id="logoMsg" class="status-msg"></div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Servers + Inventory + Pending -->
+        <div>
+            <!-- ADD SERVER CARD -->
+            <div class="card">
+                <h3>➕ Add Server</h3>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                    <button id="serverTypeV2RAY" class="server-type-btn" data-type="V2RAY">🚀 V2RAY</button>
+                    <button id="serverTypeZIVPN" class="server-type-btn" data-type="ZIVPN">🔒 ZIVPN</button>
+                    <button id="serverTypeNetMod" class="server-type-btn" data-type="NetMod">🌐 NetMod</button>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label>🇹🇭 Region / THAILAND</label>
+                    <input type="text" id="serverRegion" value="THAILAND" readonly style="background:#1a2335;">
+                </div>
+                <label>Server Name:</label><input type="text" id="serverName" placeholder="SG1 / BKK-01">
+                <label>Port:</label><input type="text" id="serverPort" placeholder="443">
+                <label>Logo URL:</label><input type="text" id="serverLogoUrl" placeholder="https://...">
+                <label>Note:</label><input type="text" id="serverNote" placeholder="Optional note">
+                <label>Config (vless/trojan/vmess):</label><textarea id="serverConfig" rows="2" placeholder="vless://... or json snippet"></textarea>
+                <button id="uploadServerBtn" class="primary">☁️ Upload Server</button>
+                <div id="serverMsg" class="status-msg"></div>
+            </div>
+
+            <!-- INVENTORY + NETMOD INVENTORY + PENDING REQUESTS (combined) -->
+            <div class="card">
+                <h3>📦 Inventory & Requests</h3>
+                <div id="inventoryList" style="margin-bottom: 16px;">
+                    <span class="inventory-tag">AIS 64KBPS VLESS V1</span>
+                    <span class="inventory-tag">AIS 64KBPS VLESS V2</span>
+                </div>
+                <div><strong>📀 NETMOD INVENTORY</strong>
+                    <div id="netmodInventory" style="margin-top: 8px;"><span class="inventory-tag">NETMOD-100GB-TH</span><span class="inventory-tag">NETMOD-UNLIMITED</span></div>
+                </div>
+                <hr>
+                <div><strong>⏳ PENDING REQUESTS</strong>
+                    <div id="pendingRequestsList" style="margin-top: 12px; background:#0a0f1a; border-radius: 20px; padding: 12px;">
+                        <div style="display: flex; justify-content: space-between;"><span>#REQ-001 - V2RAY</span> <button class="approveReq" data-req="req1" style="background:#2b6e3c;">✅ Approve</button></div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px;"><span>#REQ-002 - NetMod</span> <button class="approveReq" data-req="req2" style="background:#2b6e3c;">✅ Approve</button></div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px;"><span>#REQ-003 - ZIVPN</span> <button class="approveReq" data-req="req3" style="background:#2b6e3c;">✅ Approve</button></div>
+                    </div>
+                </div>
+                <div id="pendingMsg" class="status-msg"></div>
+            </div>
+
+            <!-- ADDITIONAL DYNAMIC SERVER LIST (show existing servers from firebase) -->
+            <div class="card">
+                <h3>🗄️ Existing Servers</h3>
+                <div id="serversListContainer">Loading servers...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Firebase config from your details
+    const firebaseConfig = {
+        apiKey: "AIzaSyARcw7hRhSuIJYFfLT9Pg3yat1LS36UOeQ",
+        authDomain: "vipv2ray-85970.firebaseapp.com",
+        projectId: "vipv2ray-85970",
+        storageBucket: "vipv2ray-85970.firebasestorage.app",
+        messagingSenderId: "526032668769",
+        appId: "1:526032668769:web:1041445a61ed70e4b40220",
+        measurementId: "G-492NQP7QH6"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Helper: show temporary message
+    function showMsg(elementId, text, isError = false) {
+        const el = document.getElementById(elementId);
+        if(el) {
+            el.innerText = text;
+            el.style.background = isError ? "#3b1e1e" : "#0f2f1f";
+            setTimeout(() => { if(el) el.innerText = ''; }, 3000);
+        }
+    }
+
+    // -------- PRICES ----------
+    function loadPrices() {
+        const pricesRef = database.ref('prices');
+        pricesRef.on('value', (snap) => {
+            const data = snap.val() || { V2RAY:50, ZIVPN:50, NetMod:50 };
+            document.getElementById('priceV2RAY').innerText = data.V2RAY || 50;
+            document.getElementById('priceZIVPN').innerText = data.ZIVPN || 50;
+            document.getElementById('priceNetMod').innerText = data.NetMod || 50;
+            // sync input placeholders for updates
+        });
+    }
+    function updatePrice(product, newValue) {
+        if(!newValue || isNaN(newValue)) { showMsg('priceMsg', 'Enter valid number', true); return false; }
+        database.ref('prices/'+product).set(parseInt(newValue)).then(()=>{
+            showMsg('priceMsg', `${product} price updated to ${newValue}`);
+        }).catch(err=>showMsg('priceMsg', err.message, true));
+        return true;
+    }
+    document.getElementById('updateV2RAYBtn').onclick = () => { let val = prompt("New price for V2RAY:"); if(val) updatePrice('V2RAY', val); };
+    document.getElementById('updateZIVPNBtn').onclick = () => { let val = prompt("New price for ZIVPN:"); if(val) updatePrice('ZIVPN', val); };
+    document.getElementById('updateNetModBtn').onclick = () => { let val = prompt("New price for NetMod:"); if(val) updatePrice('NetMod', val); };
+
+    // -------- ANNOUNCEMENT ----------
+    function loadAnnouncement() {
+        database.ref('announcement/latest').on('value', (snap) => {
+            if(snap.exists()) document.getElementById('announceText').value = snap.val();
+        });
+    }
+    document.getElementById('publishAnnounceBtn').onclick = () => {
+        const msg = document.getElementById('announceText').value;
+        if(!msg.trim()) { showMsg('announceMsg', 'Announcement cannot be empty', true); return; }
+        database.ref('announcement/latest').set(msg).then(()=>{
+            showMsg('announceMsg', '✅ Announcement published!');
+        }).catch(e=>showMsg('announceMsg', e.message, true));
+    };
+
+    // -------- BANK SETTINGS ----------
+    function loadBankSettings() {
+        const bankRef = database.ref('bankSettings');
+        bankRef.on('value', (snap) => {
+            const data = snap.val() || {};
+            document.getElementById('bankLogoUrl').value = data.logoUrl || '';
+            document.getElementById('bankQrUrl').value = data.qrUrl || '';
+            document.getElementById('bankName').value = data.bankName || '';
+            document.getElementById('bankAccountNo').value = data.accountNo || '';
+            document.getElementById('bankHolder').value = data.holder || '';
+        });
+    }
+    document.getElementById('saveBankBtn').onclick = () => {
+        const bankData = {
+            logoUrl: document.getElementById('bankLogoUrl').value,
+            qrUrl: document.getElementById('bankQrUrl').value,
+            bankName: document.getElementById('bankName').value,
+            accountNo: document.getElementById('bankAccountNo').value,
+            holder: document.getElementById('bankHolder').value
+        };
+        database.ref('bankSettings').set(bankData).then(()=>{
+            showMsg('bankMsg', 'Bank settings saved');
+        }).catch(e=>showMsg('bankMsg', e.message, true));
+    };
+
+    // -------- PRODUCT LOGOS ----------
+    function loadProductLogos() {
+        database.ref('productLogos').on('value', (snap) => {
+            const logos = snap.val() || {};
+            document.getElementById('logoV2RAY').value = logos.V2RAY || '';
+            document.getElementById('logoZIVPN').value = logos.ZIVPN || '';
+            document.getElementById('logoNetMod').value = logos.NetMod || '';
+        });
+    }
+    document.getElementById('saveLogosBtn').onclick = () => {
+        const logos = {
+            V2RAY: document.getElementById('logoV2RAY').value,
+            ZIVPN: document.getElementById('logoZIVPN').value,
+            NetMod: document.getElementById('logoNetMod').value
+        };
+        database.ref('productLogos').set(logos).then(()=>{
+            showMsg('logoMsg', 'Product logos updated');
+        }).catch(e=>showMsg('logoMsg', e.message, true));
+    };
+
+    // -------- SERVER ADD & LIST ----------
+    let selectedServerType = "V2RAY";
+    document.querySelectorAll('.server-type-btn').forEach(btn => {
+        btn.onclick = () => { selectedServerType = btn.getAttribute('data-type'); showMsg('serverMsg', `Selected type: ${selectedServerType}`, false); };
+    });
+    document.getElementById('uploadServerBtn').onclick = () => {
+        const serverName = document.getElementById('serverName').value.trim();
+        const port = document.getElementById('serverPort').value.trim();
+        const logoUrl = document.getElementById('serverLogoUrl').value.trim();
+        const note = document.getElementById('serverNote').value.trim();
+        const config = document.getElementById('serverConfig').value.trim();
+        const region = document.getElementById('serverRegion').value.trim() || "THAILAND";
+        if(!serverName) { showMsg('serverMsg', 'Server Name required', true); return; }
+        const serverObj = {
+            name: serverName,
+            port: port,
+            logoUrl: logoUrl,
+            note: note,
+            config: config,
+            region: region,
+            type: selectedServerType,
+            timestamp: Date.now()
+        };
+        const newRef = database.ref('servers/'+selectedServerType).push();
+        newRef.set(serverObj).then(()=>{
+            showMsg('serverMsg', `✅ ${selectedServerType} server added!`);
+            document.getElementById('serverName').value = '';
+            document.getElementById('serverPort').value = '';
+            document.getElementById('serverLogoUrl').value = '';
+            document.getElementById('serverNote').value = '';
+            document.getElementById('serverConfig').value = '';
+        }).catch(e=>showMsg('serverMsg', e.message, true));
+    };
+
+    function loadServers() {
+        const serversRef = database.ref('servers');
+        serversRef.on('value', (snap) => {
+            const allServers = snap.val() || {};
+            let html = '';
+            for(let type in allServers) {
+                html += `<div style="margin-top:12px;"><strong>📡 ${type}</strong><div style="padding-left:8px;">`;
+                const items = allServers[type];
+                for(let id in items) {
+                    const s = items[id];
+                    html += `<div class="server-item">🔹 ${s.name} | Port:${s.port || '?'} | ${s.note ? s.note : ''}<br><small>Config: ${s.config ? s.config.substring(0,40)+'...' : 'none'}</small></div>`;
+                }
+                html += `</div></div>`;
+            }
+            if(!Object.keys(allServers).length) html = '<i>No servers added yet</i>';
+            document.getElementById('serversListContainer').innerHTML = html;
+        });
+    }
+
+    // -------- PENDING REQUESTS (demo + realtime) ----------
+    function loadPendingRequests() {
+        database.ref('pendingRequests').on('value', (snap) => {
+            const pendings = snap.val() || {};
+            let container = document.getElementById('pendingRequestsList');
+            if(!container) return;
+            if(Object.keys(pendings).length === 0) {
+                container.innerHTML = '<div style="padding:8px;">✨ No pending requests</div>';
+                return;
+            }
+            let inner = '';
+            for(let id in pendings) {
+                const req = pendings[id];
+                inner += `<div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                            <span>${req.requestId || id} - ${req.product || 'unknown'}</span>
+                            <button class="approve-firebase" data-key="${id}" style="background:#2b6e3c; padding:4px 12px;">✅ Approve</button>
+                          </div>`;
+            }
+            container.innerHTML = inner;
+            // attach dynamic events
+            document.querySelectorAll('.approve-firebase').forEach(btn => {
+                btn.onclick = (e) => {
+                    const key = btn.getAttribute('data-key');
+                    database.ref('pendingRequests/'+key).remove().then(()=>{
+                        showMsg('pendingMsg', `Request ${key} approved and removed`);
+                    }).catch(err=>showMsg('pendingMsg', err.message, true));
+                };
+            });
+        });
+    }
+
+    // demo inventory realtime support (optional)
+    function loadInventoryFromFirebase() {
+        database.ref('inventory/main').on('value', (snap) => {
+            const inv = snap.val() || ["AIS 64KBPS VLESS V1", "AIS 64KBPS VLESS V2"];
+            let invHtml = '';
+            inv.forEach(item => { invHtml += `<span class="inventory-tag">${item}</span>`; });
+            document.getElementById('inventoryList').innerHTML = invHtml;
+        });
+        database.ref('inventory/netmod').on('value', (snap) => {
+            const netmodInv = snap.val() || ["NETMOD-100GB-TH", "NETMOD-UNLIMITED"];
+            let nmHtml = '';
+            netmodInv.forEach(item => { nmHtml += `<span class="inventory-tag">${item}</span>`; });
+            document.getElementById('netmodInventory').innerHTML = nmHtml;
+        });
+    }
+
+    // initialize demo data if empty (optional: set defaults)
+    function initDefaultData() {
+        const pricesRef = database.ref('prices');
+        pricesRef.once('value', snap => { if(!snap.exists()) pricesRef.set({V2RAY:50, ZIVPN:50, NetMod:50}); });
+        database.ref('announcement/latest').once('value', snap => { if(!snap.exists()) database.ref('announcement/latest').set("Welcome to VIP V2RAY Admin"); });
+        database.ref('bankSettings').once('value', snap => { if(!snap.exists()) database.ref('bankSettings').set({logoUrl:"",qrUrl:"",bankName:"SCB",accountNo:"000-111-222",holder:"VIP ADMIN"}); });
+        database.ref('productLogos').once('value', snap => { if(!snap.exists()) database.ref('productLogos').set({V2RAY:"",ZIVPN:"",NetMod:""}); });
+        database.ref('pendingRequests').once('value', snap => {
+            if(!snap.exists()){
+                database.ref('pendingRequests').set({
+                    req001: { requestId:"#REQ-001", product:"V2RAY", user:"user@example.com" },
+                    req002: { requestId:"#REQ-002", product:"NetMod", user:"netfan" },
+                    req003: { requestId:"#REQ-003", product:"ZIVPN", user:"vpnuser" }
+                });
+            }
+        });
+        database.ref('inventory/main').once('value', snap => { if(!snap.exists()) database.ref('inventory/main').set(["AIS 64KBPS VLESS V1","AIS 64KBPS VLESS V2"]); });
+        database.ref('inventory/netmod').once('value', snap => { if(!snap.exists()) database.ref('inventory/netmod').set(["NETMOD-100GB-TH","NETMOD-UNLIMITED"]); });
+    }
+
+    // old static pending handlers (if needed)
+    function bindStaticApprove() {
+        const btns = document.querySelectorAll('.approveReq');
+        btns.forEach(btn => {
+            btn.onclick = (e) => {
+                const reqId = btn.getAttribute('data-req');
+                showMsg('pendingMsg', `✅ ${reqId} approved (demo) – In real DB this action is synced.`, false);
+                btn.remove();
+            };
+        });
+    }
+
+    // call all loaders
+    loadPrices();
+    loadAnnouncement();
+    loadBankSettings();
+    loadProductLogos();
+    loadServers();
+    loadPendingRequests();
+    loadInventoryFromFirebase();
+    initDefaultData();
+    setTimeout(()=> bindStaticApprove(), 500);
+</script>
+</body>
+                                                                                                        </html>
